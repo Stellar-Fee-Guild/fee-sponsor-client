@@ -1,0 +1,72 @@
+{
+  "name": "@stellar-fee-guild/fee-sponsor-client",
+  "version": "0.1.0",
+  "description": "TypeScript client SDK for getting Stellar transactions fee-sponsored by a fee-sponsor-relay.",
+  "license": "MIT",
+  "author": "Stellar Fee Guild",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Stellar-Fee-Guild/fee-sponsor-client.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Stellar-Fee-Guild/fee-sponsor-client/issues"
+  },
+  "homepage": "https://github.com/Stellar-Fee-Guild/fee-sponsor-client#readme",
+  "keywords": [
+    "stellar",
+    "fee-bump",
+    "fee-sponsorship",
+    "gasless",
+    "sdk"
+  ],
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": false,
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "rm -rf dist && tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:integration": "vitest run --config vitest.integration.config.ts",
+    "prepublishOnly": "npm run lint && npm run typecheck && npm test && npm run build"
+  },
+  "peerDependencies": {
+    "@stellar/stellar-sdk": ">=13.0.0 <18"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.5",
+    "@stellar/stellar-sdk": "^13.3.0",
+    "@types/node": "^18.19.130",
+    "@vitest/coverage-v8": "^3.2.7",
+    "eslint": "^9.39.5",
+    "eslint-config-prettier": "^10.1.8",
+    "globals": "^17.14.0",
+    "prettier": "^3.9.10",
+    "typescript": "~5.9",
+    "typescript-eslint": "^8.72.1",
+    "vite": "^6.4.5",
+    "vitest": "^3.2.7"
+  }
+}

@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>fee-sponsor-client · Freighter example</title>
+    <style>
+      body {
+        font:
+          16px/1.5 system-ui,
+          sans-serif;
+        max-width: 40rem;
+        margin: 2rem auto;
+        padding: 0 1rem;
+      }
+      label {
+        display: block;
+        margin-top: 1rem;
+      }
+      input {
+        width: 100%;
+        padding: 0.4rem;
+        font: inherit;
+      }
+      button {
+        margin-top: 1rem;
+        padding: 0.5rem 1rem;
+        font: inherit;
+      }
+      pre {
+        background: #f4f4f4;
+        padding: 1rem;
+        white-space: pre-wrap;
+        word-break: break-all;
+      }
+    </style>
+    <!--
+      No bundler needed: the import map resolves the SDK and Freighter from a CDN and this package
+      from the local build. Run `npm run build` at the repo root, serve the repo root
+      (e.g. `npx http-server . -p 5173`) and open /examples/browser/.
+    -->
+    <script type="importmap">
+      {
+        "imports": {
+          "@stellar/stellar-sdk": "https://esm.sh/@stellar/stellar-sdk@13",
+          "@stellar/freighter-api": "https://esm.sh/@stellar/freighter-api@6",
+          "@stellar-fee-guild/fee-sponsor-client": "../../dist/index.js"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <h1>Gasless payment with Freighter</h1>
+    <p>
+      Signs a testnet payment with Freighter and has a fee-sponsor-relay pay the fee. Switch
+      Freighter to <strong>Testnet</strong> and fund your account with Friendbot first.
+    </p>
+    <label>Relay URL <input id="relay" value="http://localhost:8080" /></label>
+    <label>Destination <input id="destination" placeholder="G..." /></label>
+    <label>Amount (XLM) <input id="amount" value="1" /></label>
+    <button id="send">Sign &amp; send without paying fees</button>
+    <pre id="log"></pre>
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>

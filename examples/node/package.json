@@ -1,0 +1,12 @@
+{
+  "name": "fee-sponsor-client-example-node",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node sponsor-payment.mjs"
+  },
+  "dependencies": {
+    "@stellar-fee-guild/fee-sponsor-client": "file:../..",
+    "@stellar/stellar-sdk": "^13.3.0"
+  }
+}
