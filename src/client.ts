@@ -25,6 +25,8 @@ const DEFAULT_TIMEOUT_MS = 10_000;
 /** Horizon holds a submission open until the transaction lands or times out (~30 s+). */
 const MIN_SUBMIT_TIMEOUT_MS = 60_000;
 const REJECTION_STATUSES = new Set([400, 403, 429]);
+/** Largest delay `setTimeout` honours; anything above fires after ~1 ms instead. */
+const MAX_TIMER_MS = 2 ** 31 - 1;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -48,6 +50,9 @@ function isLocalHost(hostname: string): boolean {
 }
 
 function normalizeBaseUrl(name: string, value: string, allowInsecureHttp: boolean): string {
+  if (typeof value !== 'string' || value.trim() === '') {
+    throw new LocalValidationError('INVALID_CONFIG', `${name} is required.`);
+  }
   let url: URL;
   try {
     url = new URL(value);
@@ -63,6 +68,12 @@ function normalizeBaseUrl(name: string, value: string, allowInsecureHttp: boolea
     throw new LocalValidationError(
       'INVALID_CONFIG',
       `${name} must use https:// (got ${url.origin}). Set allowInsecureHttp only for local testing.`,
+    );
+  }
+  if (url.search !== '' || url.hash !== '') {
+    throw new LocalValidationError(
+      'INVALID_CONFIG',
+      `${name} must not include a query string or fragment: request paths are appended to it.`,
     );
   }
   return url.toString().replace(/\/+$/, '');
@@ -122,12 +133,19 @@ export class FeeSponsorClient {
     this.#fetch = options.fetch ?? ((input, init) => globalThis.fetch(input, init));
 
     const timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
-    if (!(timeoutMs > 0)) {
-      throw new LocalValidationError('INVALID_CONFIG', 'timeoutMs must be a positive number.');
+    if (typeof timeoutMs !== 'number' || !(timeoutMs > 0 && timeoutMs <= MAX_TIMER_MS)) {
+      throw new LocalValidationError(
+        'INVALID_CONFIG',
+        `timeoutMs must be a positive number no larger than ${MAX_TIMER_MS}.`,
+      );
     }
     this.#timeoutMs = timeoutMs;
     this.#headers = { ...options.headers };
-    this.#retry = resolveRetry(options.retry);
+    try {
+      this.#retry = resolveRetry(options.retry);
+    } catch (cause) {
+      throw new LocalValidationError('INVALID_CONFIG', (cause as Error).message, { cause });
+    }
 
     if (options.sponsorPublicKey !== undefined) {
       if (!StrKey.isValidEd25519PublicKey(options.sponsorPublicKey)) {

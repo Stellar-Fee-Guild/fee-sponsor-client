@@ -146,17 +146,17 @@ Every export has TSDoc, so your editor shows these descriptions inline.
 
 ### `new FeeSponsorClient(options)`
 
-| Option              | Type                     | Default        | Description                                                                                                       |
-| ------------------- | ------------------------ | -------------- | ----------------------------------------------------------------------------------------------------------------- |
-| `relayUrl`          | `string`                 | **required**   | Relay base URL. May include a path prefix. Must be `https://` unless the host is `localhost`/`127.0.0.1`/`[::1]`. |
-| `networkPassphrase` | `string`                 | **required**   | e.g. `Networks.TESTNET`. Every transaction is checked against it.                                                 |
-| `horizonUrl`        | `string`                 | none           | Needed only for `submit()` / `sponsorAndSubmit()`.                                                                |
-| `fetch`             | `typeof fetch`           | global `fetch` | Inject a custom implementation (tests, proxies, older runtimes).                                                  |
-| `timeoutMs`         | `number`                 | `10000`        | Per-request timeout. Each retry gets a fresh timeout. `submit()` waits at least 60 s.                             |
-| `headers`           | `Record<string, string>` | `{}`           | Extra headers sent to the **relay** only (never to Horizon).                                                      |
-| `retry`             | `RetryOptions \| false`  | see below      | Retry policy, or `false` to disable retries.                                                                      |
-| `sponsorPublicKey`  | `string`                 | from `/health` | Pin the sponsor key used for verification. Recommended in production (see [Security](#security)).                 |
-| `allowInsecureHttp` | `boolean`                | `false`        | Allow `http://` for non-local hosts. For local testing only.                                                      |
+| Option              | Type                     | Default        | Description                                                                                                                                        |
+| ------------------- | ------------------------ | -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `relayUrl`          | `string`                 | **required**   | Relay base URL. May include a path prefix, but no query string or fragment. Must be `https://` unless the host is `localhost`/`127.0.0.1`/`[::1]`. |
+| `networkPassphrase` | `string`                 | **required**   | e.g. `Networks.TESTNET`. Every transaction is checked against it.                                                                                  |
+| `horizonUrl`        | `string`                 | none           | Needed only for `submit()` / `sponsorAndSubmit()`.                                                                                                 |
+| `fetch`             | `typeof fetch`           | global `fetch` | Inject a custom implementation (tests, proxies, older runtimes).                                                                                   |
+| `timeoutMs`         | `number`                 | `10000`        | Per-request timeout. Each retry gets a fresh timeout. `submit()` waits at least 60 s.                                                              |
+| `headers`           | `Record<string, string>` | `{}`           | Extra headers sent to the **relay** only (never to Horizon).                                                                                       |
+| `retry`             | `RetryOptions \| false`  | see below      | Retry policy, or `false` to disable retries.                                                                                                       |
+| `sponsorPublicKey`  | `string`                 | from `/health` | Pin the sponsor key used for verification. Recommended in production (see [Security](#security)).                                                  |
+| `allowInsecureHttp` | `boolean`                | `false`        | Allow `http://` for non-local hosts. For local testing only.                                                                                       |
 
 Invalid options throw `LocalValidationError` with code `INVALID_CONFIG`.
 

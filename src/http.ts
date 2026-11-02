@@ -23,11 +23,20 @@ export const DEFAULT_RETRY: ResolvedRetry = {
   retryOnRateLimit: false,
 };
 
+/** Largest delay `setTimeout` honours; anything above fires after ~1 ms instead. */
+const MAX_DELAY_MS = 2 ** 31 - 1;
+
 export function resolveRetry(retry: RetryOptions | false | undefined): ResolvedRetry {
   if (retry === false) return { ...DEFAULT_RETRY, retries: 0 };
   const resolved = { ...DEFAULT_RETRY, ...stripUndefined(retry ?? {}) };
   if (!Number.isInteger(resolved.retries) || resolved.retries < 0) {
     throw new RangeError('retry.retries must be a non-negative integer');
+  }
+  for (const key of ['baseDelayMs', 'maxDelayMs'] as const) {
+    const value = resolved[key];
+    if (typeof value !== 'number' || !(value >= 0 && value <= MAX_DELAY_MS)) {
+      throw new RangeError(`retry.${key} must be a number from 0 to ${MAX_DELAY_MS}`);
+    }
   }
   return resolved;
 }

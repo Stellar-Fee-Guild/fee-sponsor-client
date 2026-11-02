@@ -71,6 +71,15 @@ describe('resolveRetry', () => {
     expect(() => resolveRetry({ retries: -1 })).toThrow(RangeError);
     expect(() => resolveRetry({ retries: 1.5 })).toThrow(RangeError);
   });
+  it('rejects delays setTimeout cannot represent', () => {
+    expect(() => resolveRetry({ baseDelayMs: -1 })).toThrow(RangeError);
+    expect(() => resolveRetry({ baseDelayMs: Number.NaN })).toThrow(RangeError);
+    expect(() => resolveRetry({ maxDelayMs: Number.POSITIVE_INFINITY })).toThrow(RangeError);
+    expect(resolveRetry({ baseDelayMs: 0, maxDelayMs: 0 })).toMatchObject({
+      baseDelayMs: 0,
+      maxDelayMs: 0,
+    });
+  });
 });
 
 describe('backoffDelay', () => {

@@ -63,7 +63,17 @@ describe('constructor', () => {
     [{ relayUrl: 'http://relay.example.com' }],
     [{ horizonUrl: 'http://horizon.example.com' }],
     [{ networkPassphrase: '' }],
+    [{ relayUrl: undefined }],
+    [{ relayUrl: 'https://relay.example.com/?key=1' }],
+    [{ relayUrl: 'https://relay.example.com/#frag' }],
+    [{ horizonUrl: 'https://horizon.example.com/?x=1' }],
     [{ timeoutMs: 0 }],
+    [{ timeoutMs: Number.POSITIVE_INFINITY }],
+    [{ timeoutMs: 2 ** 31 }],
+    [{ timeoutMs: '1000' }],
+    [{ retry: { retries: -1 } }],
+    [{ retry: { baseDelayMs: Number.NaN } }],
+    [{ retry: { maxDelayMs: -1 } }],
     [{ sponsorPublicKey: 'GNOTAKEY' }],
   ])('rejects invalid config %j', (override) => {
     const err = (() => {
@@ -75,6 +85,18 @@ describe('constructor', () => {
     })();
     expect(err).toBeInstanceOf(LocalValidationError);
     expect((err as LocalValidationError).code).toBe('INVALID_CONFIG');
+  });
+
+  it('reports invalid retry options as INVALID_CONFIG with the original error as cause', () => {
+    let err: unknown;
+    try {
+      new FeeSponsorClient({ ...base, retry: { retries: -1 } });
+    } catch (e) {
+      err = e;
+    }
+    expect(err).toBeInstanceOf(LocalValidationError);
+    expect((err as LocalValidationError).message).toMatch(/retry\.retries/);
+    expect((err as LocalValidationError).cause).toBeInstanceOf(RangeError);
   });
 
   it('rejects missing options', () => {
