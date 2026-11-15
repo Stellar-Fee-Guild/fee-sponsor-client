@@ -22,6 +22,7 @@ const { submission } = await client.sponsorAndSubmit(signedTx); // the user paid
 - [Quick start](#quick-start)
 - [API reference](#api-reference)
 - [Error handling](#error-handling)
+- [Troubleshooting](#troubleshooting)
 - [Security](#security)
 - [Examples](#examples)
 - [Development](#development)
@@ -332,6 +333,85 @@ function userMessage(err: SponsorRejectedError): string {
   }
 }
 ```
+
+## Troubleshooting
+
+### CORS errors in the browser
+
+- **What you see:** the browser console shows `blocked by CORS policy` (or `Failed to fetch`), and
+  `sponsor()` throws `RelayUnavailableError` with no `status`.
+- **Why:** the relay is on a different origin from your app and doesn't send
+  `Access-Control-Allow-Origin` for it, or doesn't answer the preflight `OPTIONS` request. Custom
+  `headers` (e.g. an API key) and the JSON `Content-Type` always trigger a preflight.
+- **Fix:** ask the relay operator to allow your app's origin, including `Content-Type` and any
+  custom header names in `Access-Control-Allow-Headers`. Alternatively, call the relay from your
+  backend or through a same-origin proxy. Retrying from the client won't help.
+
+### `NETWORK_MISMATCH`
+
+- **What you see:** `LocalValidationError` with code `NETWORK_MISMATCH`: "Transaction was built
+  for network ... but the client is configured for ..." or "The source account signature does
+  not verify for the configured network passphrase."
+- **Why:** the transaction (or the wallet that signed it) is for a different network than the
+  client's `networkPassphrase`, typically a wallet such as Freighter set to Mainnet while your
+  app uses Testnet.
+- **Fix:** ask the user to switch the wallet to the right network, or make sure
+  `networkPassphrase` (e.g. `Networks.TESTNET`) is the same value used to build and sign the
+  transaction. Then build and sign again.
+
+### `NOT_SIGNED`
+
+- **What you see:** `LocalValidationError` with code `NOT_SIGNED`: "The transaction is not
+  signed."
+- **Why:** the transaction was sent without signatures. The relay's README describes the request
+  body as an "unsigned" transaction; that wording is a known error. The relay needs the
+  **signed** inner transaction, because signatures can't be added once it is wrapped in a fee
+  bump.
+- **Fix:** sign the transaction with its source account (`tx.sign(keypair)` or your wallet)
+  before calling `sponsor()` / `sponsorAndSubmit()`.
+
+### `tx_bad_seq`
+
+- **What you see:** `HorizonSubmissionError` whose `resultCodes` contain `tx_bad_seq` (usually as
+  `{ transaction: 'tx_fee_bump_inner_failed', inner_transaction: 'tx_bad_seq' }`).
+- **Why:** the inner transaction's sequence number is no longer the account's next one. This
+  happens when you reuse a transaction you already built (or submitted), or when another
+  transaction from the same account landed in between.
+- **Fix:** reload the account from Horizon (`loadAccount`), build a new transaction, sign it and
+  sponsor it again. Don't resubmit an old envelope.
+
+### `tx_fee_bump_inner_failed`
+
+- **What you see:** `HorizonSubmissionError` with
+  `resultCodes.transaction === 'tx_fee_bump_inner_failed'`.
+- **Why:** the fee bump itself was fine, but the inner transaction failed. The real reason is in
+  `resultCodes.inner_transaction` (e.g. `tx_bad_seq`, `tx_too_late`, `tx_bad_auth`) and, for
+  operation failures, in `resultCodes.operations`.
+- **Fix:** handle the inner code as you would for an ordinary transaction: for example reload and
+  rebuild for `tx_bad_seq`, rebuild with new time bounds for `tx_too_late`, or fix the operation
+  (destination, balance, trustline) for `tx_failed`.
+
+### `INVALID_CONFIG` for an `http://` URL
+
+- **What you see:** `new FeeSponsorClient()` throws `LocalValidationError` with code
+  `INVALID_CONFIG`: "relayUrl must use https:// (got http://...). Set allowInsecureHttp only for
+  local testing." (or the same for `horizonUrl`).
+- **Why:** plain HTTP is refused for any host except `localhost`, `*.localhost`, `127.0.0.1` and
+  `[::1]`, so transactions and responses can't be read or tampered with in transit.
+- **Fix:** use an `https://` URL. For a relay on another machine in a local test setup only, pass
+  `allowInsecureHttp: true`. Also note the URL must not include a query string or fragment.
+
+### SDK or Node version mismatch
+
+- **What you see:** `npm` peer-dependency warnings or `ERESOLVE` errors, `fetch is not defined`,
+  syntax or engine errors when importing `@stellar/stellar-sdk`, or SDK objects that don't behave
+  as expected.
+- **Why:** `@stellar/stellar-sdk` is a peer dependency supported at `>=13 <18`. SDK v14+ needs
+  Node 20+, v16+ needs Node 22+, and this client needs Node 18+ for the global `fetch`. Having two
+  copies of the SDK installed can also cause confusing type errors.
+- **Fix:** install a supported SDK version that matches your Node version (on Node 18 use SDK 13),
+  or upgrade Node. Run `npm ls @stellar/stellar-sdk` to make sure only one copy is installed. On
+  runtimes without `fetch`, pass one with the `fetch` option.
 
 ## Security
 
